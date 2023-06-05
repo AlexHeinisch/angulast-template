@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  auth_service:
+    build: .
+    ports:
+      - "8000:8000"
+    command: uvicorn --reload --host 0.0.0.0 --port 8000 app.main:app
+    volumes:
+      - .:/code
+    depends_on:
+      - db
+      - db_test
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432
+      - TEST_DATABASE_URL=postgresql+asyncpg://postgres:postgres@db_test:5432
+
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=auth
+
+  db_test:
+    image: postgres
+    environment: 
+      - POSTGRES_DB=test
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+  pg_admin:
+    container_name: pg_admin
+    image: dpage/pgadmin4
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+      - db_test
